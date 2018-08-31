@@ -1,0 +1,180 @@
+@import url(icon-font.css);
+
+.md-wrap {
+  width: 1024px;
+  margin: 0 auto;
+  font-size: 16px;
+  font-family: PingFang SC, Hiragino Sans GB, Helvetica Neue, Microsoft Yahei, WenQuanYi Micro Hei, sans-serif;
+}
+.md-wrap>p,
+.md-wrap>pre,
+.md-wrap>blockquote {
+  margin: 0 0 20px;
+}
+.md-wrap ul,
+.md-wrap ol {
+  padding-left: 0;
+  margin: 0 0 10px 25px;
+  line-height: 27px;
+  color: #2C3E50;
+  font-size: 16px;
+}
+.md-wrap pre {
+  font-size: 14px;
+  padding: 9.5px;
+  border: none;
+  background-color: rgba(102, 128, 153, 0.05);
+  box-shadow: 0 1px 2px rgba(255, 255, 255, 0.1) inset, 45px 0 0 rgba(102, 128, 153, 0.05) inset, 0 1px 0 rgba(102, 128, 153, 0.05);
+}
+.md-wrap blockquote {
+  padding: 10px 15px;
+  background: none repeat scroll 0 0 rgba(102, 128, 153, .05);
+  border-color: #D6DBDF;
+  border-left-width: 10px;
+}
+.md-wrap blockquote q {
+  font-size: 16px;
+}
+.md-wrap pre ol {
+  color: rgba(102, 128, 153, 0.4);
+  margin: 0 0 0 28px;
+  padding-left: 0;
+}
+.md-wrap pre ol>li {
+  line-height: 20px;
+  padding-left: 15px;
+  color: #000;
+}
+.md-wrap hr {
+  border: 0;
+  border-bottom: 1px dashed #cfcfcf;
+  margin: 30px 0;
+}
+.md-wrap .hljs {
+  background-color: transparent;
+}
+@font-face {
+  font-family: FontAwesome;
+  src: url(../font/fontawesome-webfont.eot?v=3.2.1);
+  src: url(../font/fontawesome-webfont.eot?#iefix&v=3.2.1) format('embedded-opentype'), url(../font/fontawesome-webfont.woff?v=3.2.1) format('woff'), url(../font/fontawesome-webfont.ttf?v=3.2.1) format('truetype');
+  font-weight: 400;
+  font-style: normal
+}
+.md-wrap [class^=icon-],
+.md-wrap [class*=" icon-"] {
+  display: inline;
+  width: auto;
+  height: auto;
+  line-height: normal;
+  vertical-align: baseline;
+  background-image: none;
+  background-position: 0 0;
+  background-repeat: repeat;
+  margin-top: 0;
+  font-family: FontAwesome;
+  font-weight: 400;
+  font-style: normal;
+  text-decoration: inherit;
+  -webkit-font-smoothing: antialiased;
+}
+.md-wrap table {
+  border: 1px solid #ddd;
+  border-collapse: separate;
+  border-left: 0;
+  -webkit-border-radius: 4px;
+  -moz-border-radius: 4px;
+  border-radius: 4px;
+  width: 100%;
+  margin-bottom: 20px;
+  border-spacing: 0;
+}
+.md-wrap table th,
+.md-wrap table td {
+  padding: 8px;
+  line-height: 20px;
+  text-align: left;
+  vertical-align: top;
+  border-top: 1px solid #ddd;
+  border-left: 1px solid #ddd;
+}
+.md-wrap table th {
+  font-weight: 700;
+}
+.md-wrap table thead th {
+  vertical-align: bottom;
+}
+.md-wrap table thead:first-child tr:first-child>th:first-child,
+.md-wrap table tbody:first-child tr:first-child>td:first-child {
+  -webkit-border-top-left-radius: 4px;
+  border-top-left-radius: 4px;
+  -moz-border-radius-topleft: 4px;
+}
+.md-wrap table thead:first-child tr:first-child th,
+.md-wrap table tbody:first-child tr:first-child th,
+.md-wrap table tbody:first-child tr:first-child td {
+  border-top: 0;
+}
+.md-wrap table tbody>tr:nth-child(2n+1)>td,
+.md-wrap table tbody>tr:nth-child(2n+1)>th {
+  background-color: rgba(102, 128, 153, .05);
+}
+.md-wrap h1 {
+  margin: 50px 0 20px;
+  font-size: 30px;
+  color: #0077bb;
+}
+
+.md-wrap h2 {
+  margin: 35px 0 20px;
+  font-size: 26px
+}
+
+.md-wrap h3 {
+  margin: 20px 0;
+  font-size: 21px
+}
+
+.md-wrap h4 {
+  font-size: 18px
+}
+
+.md-wrap h5,
+.md-wrap h6 {
+  font-size: 16px
+}
+
+.md-wrap svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.md-wrap .toc ul {
+  list-style-type: none;
+}
+
+.md-wrap a {
+  color: #08c;
+  outline: none;
+}
+
+.md-wrap a:hover {
+  color: #5BA4E5;
+  text-decoration: underline;
+}
+
+.md-wrap .footnote {
+  vertical-align: baseline;
+  top: -8px;
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+}
+
+.md-wrap .footnotes {
+  margin-bottom: 20px;
+}
+
+.md-wrap .footnotes small {
+  color: #888;
+  font-size: .9em;
+}
