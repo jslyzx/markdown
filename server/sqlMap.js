@@ -5,7 +5,8 @@ var sqlMap = {
 		select_name: 'select * from user where username = ?'
 	},
 	article: {
-		get: 'select * from article where id = ?'
+		get: 'select * from article where id = ?',
+		all: 'select * from article'
 	}
 }
 module.exports = sqlMap;
