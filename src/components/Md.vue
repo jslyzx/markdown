@@ -55,7 +55,7 @@ export default {
           }]
         ]
       }
-      this.$http.get('/api/article/getArticle?id=1')
+      this.$http.get('/api/article/getArticle?id=' + this.$route.params.id)
         .then((response) => {
           var renderer = new marked.Renderer()
           renderer.code = function(code, language, escaped) {

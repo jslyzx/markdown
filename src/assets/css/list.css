@@ -1,0 +1,22 @@
+.md-list{
+	width: 1000px;
+	margin: 100px auto;
+}
+.md-list .md{
+	margin-bottom: 20px;
+	border-bottom: 1px dotted #ccc;
+	padding-bottom: 10px;
+}
+.md-list .md .md-head{
+	overflow: hidden;
+	margin-bottom: 10px;
+}
+.md-list .md .author{
+	float: left;
+}
+.md-list .md .time{
+	float: right;
+}
+.md-list .md .md-cont{
+	text-indent: 40px;
+}
