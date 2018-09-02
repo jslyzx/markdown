@@ -15,6 +15,6 @@ app.use('/api/user', userApi);
 app.use('/api/article', articleApi);
 
 // 监听端口
-app.listen(3000);
+var server = app.listen(3000);
 console.log('success listen at port:3000......');
-
+server.setTimeout(0)
