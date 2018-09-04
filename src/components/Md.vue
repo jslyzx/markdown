@@ -6,6 +6,7 @@
 import marked from 'marked';
 import 'highlight.js/styles/solarized-light.css'
 import '../assets/css/customize.css'
+import '../assets/css/icon-font.css'
 import $ from 'jquery'
 
 export default {
@@ -345,5 +346,5 @@ export default {
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
 @import url(//cdn.bootcss.com/bootstrap/3.3.1/css/bootstrap.min.css);
-@import url(//use.fontawesome.com/releases/v5.2.0/css/all.css);
+/*@import url(//use.fontawesome.com/releases/v5.2.0/css/all.css);*/
 </style>

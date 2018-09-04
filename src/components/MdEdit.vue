@@ -1,5 +1,8 @@
 <template>
     <div class="edit-view clearfix">
+        <div class="heading">
+            <a class="submit" href="javascript:;"><i class="icon-chevron-sign-up"></i>提交</a>
+        </div>
         <div class="pull-left">
             <textarea name="" id="" :value="input" @input="update" class="editor-input"></textarea>
         </div>
@@ -351,6 +354,7 @@ export default {
 </script>
 <style scoped>
 @import url(//cdn.bootcss.com/bootstrap/3.3.1/css/bootstrap.min.css);
-@import url(//use.fontawesome.com/releases/v5.2.0/css/all.css);
+/*@import url(//use.fontawesome.com/releases/v5.2.0/css/all.css);*/
+@import url(../assets/css/icon-font.css);
 @import url(../assets/css/edit.css);
 </style>

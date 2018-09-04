@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import MdList from '@/components/MdList'
 import Md from '@/components/Md'
 import MdEdit from '@/components/MdEdit'
+import Icons from '@/components/Icons'
 
 Vue.use(Router)
 
@@ -22,6 +23,11 @@ export default new Router({
       path: '/article/edit/:id',
       name: 'edit',
       component: MdEdit
+    },
+    {
+      path: '/icon/list',
+      name: 'icon',
+      component: Icons
     }
   ]
 })

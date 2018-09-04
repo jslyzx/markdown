@@ -1,13 +1,9 @@
-var models = require('../db');
 var express = require('express');
 var router = express.Router();
-var mysql = require('mysql');
+var query = require('../pool')
+
 var $sql = require('../sqlMap');
 
-// 连接数据库
-var conn = mysql.createConnection(models.mysql);
-
-conn.connect();
 var jsonWrite = function(res, ret) {
   if (typeof ret === 'undefined') {
     res.json({
@@ -24,7 +20,7 @@ router.get('/getArticle', (req, res) => {
   var sql = $sql.article.get;
   console.error('sql:', sql);
   console.log('id:', req.query.id);
-  conn.query(sql, [req.query.id], function(err, result) {
+  query(sql, [req.query.id], function(err, result) {
     if (err) {
       console.log(err);
     }
@@ -38,7 +34,7 @@ router.get('/getArticle', (req, res) => {
 router.get('/listArticles', (req, res) => {
   var sql = $sql.article.all;
   console.error('sql:', sql);
-  conn.query(sql, function(err, result) {
+  query(sql, function(err, result) {
     if (err) {
       console.log(err);
     }
