@@ -44,4 +44,35 @@ router.get('/listArticles', (req, res) => {
   })
 });
 
+// 新建文章
+router.post('/add', (req, res) => {
+  var sql = $sql.article.add;
+  console.error('sql:', sql);
+  var article = req.body;
+  query(sql, [article.title, '赵翔', article.content], function(err, result) {
+    if (err) {
+      console.log(err)
+    }
+    if (result) {
+      jsonWrite(res, result)
+    }
+  })
+});
+
+
+// 修改文章
+router.put('/update', (req, res) => {
+  var sql = $sql.article.update;
+  console.error('sql:', sql);
+  var article = req.body;
+  query(sql, [article.content, article.id], function(err, result) {
+    if (err) {
+      console.log(err)
+    }
+    if (result) {
+      jsonWrite(res, result)
+    }
+  })
+})
+
 module.exports = router;
