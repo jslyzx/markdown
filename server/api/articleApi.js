@@ -4,7 +4,7 @@ var query = require('../pool')
 
 var $sql = require('../sqlMap');
 
-var jsonWrite = function(res, ret) {
+var jsonWrite = function (res, ret) {
   if (typeof ret === 'undefined') {
     res.json({
       code: '1',
@@ -20,7 +20,7 @@ router.get('/getArticle', (req, res) => {
   var sql = $sql.article.get;
   console.error('sql:', sql);
   console.log('id:', req.query.id);
-  query(sql, [req.query.id], function(err, result) {
+  query(sql, [req.query.id], function (err, result) {
     if (err) {
       console.log(err);
     }
@@ -34,7 +34,7 @@ router.get('/getArticle', (req, res) => {
 router.get('/listArticles', (req, res) => {
   var sql = $sql.article.all;
   console.error('sql:', sql);
-  query(sql, function(err, result) {
+  query(sql, function (err, result) {
     if (err) {
       console.log(err);
     }
@@ -49,7 +49,7 @@ router.post('/add', (req, res) => {
   var sql = $sql.article.add;
   console.error('sql:', sql);
   var article = req.body;
-  query(sql, [article.title, '赵翔', article.content], function(err, result) {
+  query(sql, [article.title, '赵翔', article.content], function (err, result) {
     if (err) {
       console.log(err)
     }
@@ -65,7 +65,7 @@ router.put('/update', (req, res) => {
   var sql = $sql.article.update;
   console.error('sql:', sql);
   var article = req.body;
-  query(sql, [article.content, article.id], function(err, result) {
+  query(sql, [article.title, article.content, article.id], function (err, result) {
     if (err) {
       console.log(err)
     }

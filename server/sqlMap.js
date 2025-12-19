@@ -8,7 +8,7 @@ var sqlMap = {
 		get: 'select * from article where id = ?',
 		all: 'select * from article',
 		add: 'insert into article (title, author, content) values (?, ?, ?)',
-		update: 'update article set content = ? where id = ?'
+		update: 'update article set title = ?, content = ? where id = ?'
 	}
 }
 module.exports = sqlMap;

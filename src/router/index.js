@@ -15,9 +15,14 @@ export default new Router({
       component: MdList
     },
     {
-    	path: '/article/:id',
-    	name: 'detail',
-    	component: Md
+      path: '/article/create',
+      name: 'create',
+      component: MdEdit
+    },
+    {
+      path: '/article/:id',
+      name: 'detail',
+      component: Md
     },
     {
       path: '/article/edit/:id',

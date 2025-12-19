@@ -1,14 +1,24 @@
 <template>
   <div class="edit-view clearfix">
-    <div class="heading">
-      <a class="submit" href="javascript:;" @click="updateArticle"><i class="icon-chevron-sign-up"></i>提交</a>
+    <div class="toolbar">
+      <a href="javascript:;" @click="insertBold" title="粗体"><i class="icon-bold"></i></a>
+      <a href="javascript:;" @click="insertItalic" title="斜体"><i class="icon-italic"></i></a>
+      <a href="javascript:;" @click="insertHeading" title="标题"><i class="icon-font"></i></a>
+      <span class="divider">|</span>
+      <a href="javascript:;" @click="insertLink" title="链接"><i class="icon-link"></i></a>
+      <a href="javascript:;" @click="insertImage" title="图片"><i class="icon-picture"></i></a>
+      <a href="javascript:;" @click="insertList" title="列表"><i class="icon-list-ul"></i></a>
+      <span class="divider">|</span>
+      <a class="submit-inline" href="javascript:;" @click="updateArticle" title="发布"><i class="icon-cloud-upload"></i>
+        提交发布</a>
     </div>
     <div class="pull-left">
-      <textarea name="" id="" :value="input" @input="update" class="editor-input"></textarea>
+      <textarea ref="editor" name="" id="" :value="input" @input="update" @scroll="syncScroll"
+        class="editor-input"></textarea>
     </div>
     <div class="pull-right">
       <div class="panel-preview preview-container">
-        <div id="preview" class="md-wrap"></div>
+        <div id="preview" ref="preview" class="md-wrap"></div>
       </div>
     </div>
   </div>
@@ -20,6 +30,7 @@ import $ from 'jquery'
 export default {
   data() {
     return {
+      title: '',
       input: '',
       FootNote: {
         footnotes: {},
@@ -31,65 +42,130 @@ export default {
   },
   created() {
     var that = this
-    that.$http.get('/api/article/getArticle?id=' + that.$route.params.id)
-      .then((response) => {
-        that.input = response.body[0].content
-        this.previewMd(response.body[0].content)
-      })
+    if (that.$route.params.id) {
+      that.$http.get('/api/article/getArticle?id=' + that.$route.params.id)
+        .then((response) => {
+          that.title = response.body[0].title
+          that.input = response.body[0].content
+          this.previewMd(response.body[0].content)
+        })
+    } else {
+      // Default template for new article
+      this.input = "# 在此处输入标题\n\n标签(空格间隔)：未分类\n\n---\n\n在此输入正文"
+    }
   },
   methods: {
-    update: function(e) {
+    update: function (e) {
       this.input = e.target.value
       this.previewMd(e.target.value)
     },
-    updateArticle: function() {
+    updateArticle: function () {
       var that = this
-      this.$http.put('/api/article/update', {
+      // Parse title from the first line (# title)
+      let lines = that.input.split('\n')
+      let firstLine = lines[0] || ''
+      let parsedTitle = firstLine.replace(/^#\s*/, '').trim() || '无标题'
+
+      if (that.$route.params.id) {
+        this.$http.put('/api/article/update', {
           id: that.$route.params.id,
+          title: parsedTitle,
           content: that.input
         })
-        .then((response) => {
-          that.$router.push({ name: 'detail', params: { id: that.$route.params.id } })
+          .then((response) => {
+            that.$router.push({
+              name: 'detail',
+              params: {
+                id: that.$route.params.id
+              }
+            })
+          })
+      } else {
+        this.$http.post('/api/article/add', {
+          title: parsedTitle,
+          content: that.input
         })
+          .then((response) => {
+            that.$router.push({
+              name: 'MdList'
+            })
+          })
+      }
     },
-    previewMd: function(markdownString) {
+    // Sync Scroll
+    syncScroll: function (e) {
+      let editor = e.target;
+      let preview = this.$refs.preview.parentElement; // .panel-preview
+      let percentage = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
+      preview.scrollTop = percentage * (preview.scrollHeight - preview.clientHeight);
+    },
+    // Toolbar Actions
+    insertContent: function (prefix, suffix) {
+      let textarea = this.$refs.editor;
+      let start = textarea.selectionStart;
+      let end = textarea.selectionEnd;
+      let text = textarea.value;
+      let selected = text.substring(start, end);
+
+      let replacement = prefix + selected + suffix;
+      this.input = text.substring(0, start) + replacement + text.substring(end);
+
+      // Update preview immediately
+      this.previewMd(this.input);
+
+      // Restore cursor
+      this.$nextTick(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+      });
+    },
+    insertBold: function () { this.insertContent('**', '**'); },
+    insertItalic: function () { this.insertContent('*', '*'); },
+    insertHeading: function () { this.insertContent('# ', ''); },
+    insertLink: function () { this.insertContent('[', '](url)'); },
+    insertImage: function () { this.insertContent('![', '](url)'); },
+    insertList: function () { this.insertContent('- ', ''); },
+
+    previewMd: function (markdownString) {
       // $('#preview').html(marked(a))
       var that = this
-      mermaid.initialize({
-        flowchart: {
-          htmlLabels: false
-        },
-        startOnLoad: false
-      })
-      mermaid.ganttConfig = {
-        axisFormatter: [
-          // Within a day
-          ['%I:%M', function(d) {
-            return d.getHours();
-          }],
-          // Monday a week
-          ['%m/%d', function(d) { // redefine date here as '%m/%d'instead of 'w. %U', search mermaid.js
-            return d.getDay() == 1;
-          }],
-          // Day within a week (not monday)
-          ['%a %d', function(d) {
-            return d.getDay() && d.getDate() != 1;
-          }],
-          // within a month
-          ['%b %d', function(d) {
-            return d.getDate() != 1;
-          }],
-          // Month
-          ['%m-%y', function(d) {
-            return d.getMonth();
-          }]
-        ]
+      if (window.mermaid) {
+        mermaid.initialize({
+          flowchart: {
+            htmlLabels: false
+          },
+          startOnLoad: false
+        })
+        mermaid.ganttConfig = {
+          axisFormatter: [
+            // Within a day
+            ['%I:%M', function (d) {
+              return d.getHours();
+            }],
+            // Monday a week
+            ['%m/%d', function (d) { // redefine date here as '%m/%d'instead of 'w. %U', search mermaid.js
+              return d.getDay() == 1;
+            }],
+            // Day within a week (not monday)
+            ['%a %d', function (d) {
+              return d.getDay() && d.getDate() != 1;
+            }],
+            // within a month
+            ['%b %d', function (d) {
+              return d.getDate() != 1;
+            }],
+            // Month
+            ['%m-%y', function (d) {
+              return d.getMonth();
+            }]
+          ]
+        }
       }
       var renderer = new marked.Renderer()
-      renderer.code = function(code, language, escaped) {
+      renderer.code = function (code, language, escaped) {
         var chart, umlDom = document.getElementById("uml-X-x-X-diagram"),
           umlHtml;
-        if (language === 'flow') {
+        if (language === 'flow' && window.flowchart) {
           chart = flowchart.parse(code);
           chart.drawSVG("uml-X-x-X-diagram", {
             "line-width": 2,
@@ -103,7 +179,7 @@ export default {
           umlHtml = umlDom.innerHTML;
           umlDom.innerHTML = "";
           return umlHtml;
-        } else if (language === 'seq') {
+        } else if (language === 'seq' && window.Diagram) {
           chart = Diagram.parse(code)
           chart.drawSVG("uml-X-x-X-diagram", {
             theme: "simple"
@@ -124,7 +200,7 @@ export default {
           return '<pre><code class="' + language + '">' + '<ol><li>' + code.replace(/\n/g, "\n</li><li>") + '\n</li></ol></code></pre>';
         }
       }
-      renderer.listitem = function(text) {
+      renderer.listitem = function (text) {
         if (/<input disabled="" type="checkbox">/.test(text)) {
           return '<li class="todo-list-item"><i class="icon-check-empty"></i>' + text.replace(/<input disabled="" type="checkbox">/, '') + '</li>'
         } else if (/<input checked="" disabled="" type="checkbox">/.test(text)) {
@@ -133,14 +209,14 @@ export default {
           return '<li>' + text + '</li>'
         }
       }
-      renderer.paragraph = function(text) {
+      renderer.paragraph = function (text) {
         if (/\[(TOC|toc)\]/.test(text) && !/<code>\[(TOC|toc)\]<\/code>/.test(text)) {
           return '<div class="toc"></div>'
         } else {
           return '<p>' + that.newLines(text) + '</p>'
         }
       }
-      renderer.heading = function(text, level) {
+      renderer.heading = function (text, level) {
         // var escapedText = text.toLowerCase().replace(/[\s]+/g, "-").replace(/\./g, "")
         //replace(/\s/g, "-").replace(/\./g, "")
         var escapedText = text.toLowerCase().replace(/\s/g, "-").replace(that.xReg, "").replace(/\-\-+/g, "-").replace(/^-+/, "").replace(/-+$/, "")
@@ -154,19 +230,32 @@ export default {
         renderer: renderer,
         smartLists: true,
         tables: true,
-        highlight: function(code, lang, callback) {
-          let re = hljs.highlightAuto(code).value
-          return "<ol><li>" + re.replace(/\n/g, "\n</li><li>") + "\n</li></ol>"
+        highlight: function (code, lang, callback) {
+          if (window.hljs) {
+            let re = hljs.highlightAuto(code).value
+            return "<ol><li>" + re.replace(/\n/g, "\n</li><li>") + "\n</li></ol>"
+          }
+          return code
         }
       })
-      document.getElementById('preview').innerHTML =
-        marked(markdownString)
-      hljs.initHighlighting()
-      $("div.mermaid:not(:has(>svg))").each(function() {
-        var a = $(this);
-        mermaid.init(void 0, a), that.attachMermaidStyle(a)
-      })
-      var s = (function() {
+      let previewEl = document.getElementById('preview')
+      if (previewEl) {
+        previewEl.innerHTML = marked(markdownString)
+      }
+      // MathJax Rendering
+      if (window.MathJax) {
+        window.MathJax.Hub.Queue(["Typeset", window.MathJax.Hub, "preview"]);
+      }
+      if (window.hljs) {
+        hljs.initHighlighting()
+      }
+      if (window.mermaid) {
+        $("div.mermaid:not(:has(>svg))").each(function () {
+          var a = $(this);
+          mermaid.init(void 0, a), that.attachMermaidStyle(a)
+        })
+      }
+      var s = (function () {
         function a(a, b, c) {
           this.tagName = a,
             this.anchor = b,
@@ -182,11 +271,11 @@ export default {
           d = d || 1;
           var g, h = "H" + d,
             i = [];
-          return _.each(c, function(b) {
-              b.tagName != h ? d !== f && (void 0 === g && (g = new a),
-                g.children.push(b)) : (e(),
+          return _.each(c, function (b) {
+            b.tagName != h ? d !== f && (void 0 === g && (g = new a),
+              g.children.push(b)) : (e(),
                 g = b)
-            }),
+          }),
             e(),
             i
         }
@@ -205,32 +294,32 @@ export default {
           }
           var e = {},
             f = [];
-          return _.each(g.querySelectorAll("h1, h2, h3, h4, h5, h6"), function(b) {
-              f.push(new a(b.tagName, d(b), b.textContent))
-            }),
+          return _.each(g.querySelectorAll("h1, h2, h3, h4, h5, h6"), function (b) {
+            f.push(new a(b.tagName, d(b), b.textContent))
+          }),
             f = b(f),
             '<ul>\n' + f.join("") + "</ul>\n"
         }
         var e = '<div class="toc"></div>',
           f = 6;
-        a.prototype.childrenToString = function() {
-            if (0 === this.children.length)
-              return "";
-            var a = "<ul>\n";
-            return _.each(this.children, function(b) {
-                a += b.toString()
-              }),
-              a += "</ul>\n"
-          },
-          a.prototype.toString = function() {
+        a.prototype.childrenToString = function () {
+          if (0 === this.children.length)
+            return "";
+          var a = "<ul>\n";
+          return _.each(this.children, function (b) {
+            a += b.toString()
+          }),
+            a += "</ul>\n"
+        },
+          a.prototype.toString = function () {
             var a = "<li>";
             return this.anchor && this.text && (a += '<a href="javascript:;" class="anchor" data-href="' + this.anchor + '">' + this.text + "</a>"),
               a += this.childrenToString() + "</li>\n"
           };
         var g = document.getElementById("preview");
-        var j = function() {
+        var j = function () {
           var b = null;
-          _.each(document.querySelectorAll(".toc"), function(a) {
+          _.each(document.querySelectorAll(".toc"), function (a) {
             null === b && (b = d()), a.innerHTML = b
           })
         };
@@ -240,7 +329,7 @@ export default {
       })()
       s.renderToc();
     },
-    attachMermaidStyle: function(a) {
+    attachMermaidStyle: function (a) {
       var d = '';
       if ($(a).hasClass('gantt')) {
         d = '<style type="text/css" title="mermaid-svg-internal-css"> .section { stroke: none; opacity: 0.2;} .section0 { fill: rgba(102, 102, 255, 0.490196);} .section2 { fill: rgb(255, 244, 0);} .section1, .section3 { fill: white; opacity: 0.2;} .sectionTitle0 { fill: rgb(51, 51, 51);} .sectionTitle1 { fill: rgb(51, 51, 51);} .sectionTitle2 { fill: rgb(51, 51, 51);} .sectionTitle { text-anchor: start; font-size: 11px;} .grid .tick { stroke: lightgrey; opacity: 0.3; shape-rendering: crispEdges;} .grid path { stroke-width: 0;} .today { fill: none; stroke: red; stroke-width: 2px;} .task { stroke-width: 2;} .taskText { text-anchor: middle; font-size: 11px;} .taskText0, .taskText1, .taskText2, .taskText3 { fill: white;} .task0, .task1, .task2, .task3 { fill: rgb(138, 144, 221); stroke: rgb(83, 79, 188);} .titleText { text-anchor: middle; font-size: 18px; fill: black;} </style>'
@@ -252,18 +341,18 @@ export default {
       var e = $(a).children("svg");
       e.children("style").remove(), e.prepend(d)
     },
-    preConversion: function(a) {
-      a = a.replace(/(^|\n)```([^\n]*?)```([ \t]*(?=\n))/g, function(a, b, c, d) {
+    preConversion: function (a) {
+      a = a.replace(/(^|\n)```([^\n]*?)```([ \t]*(?=\n))/g, function (a, b, c, d) {
         return b + "```\n" + c + "\n```" + d
       });
       var e = a + "\n\n";
       return e;
     },
-    doTags: function(c) {
+    doTags: function (c) {
       var d = [],
         D = /((\n|^)(标签|tags)(.*?)(:|：)[^\S\n]*(\S*.*?)(\n|$))/i,
         K = [],
-        e = function(a, b, c, e, f, g, h, i) {
+        e = function (a, b, c, e, f, g, h, i) {
           if (f.length > 10)
             return b;
           var j = "",
@@ -271,7 +360,7 @@ export default {
           for (var l in k) {
             var m = k[l].trim();
             if ("" !== m && (j = j + "`" + m + "` ", -1 === d.indexOf(m) && d.push(m),
-                "4" === l))
+              "4" === l))
               break
           }
           return j = "" === j ? "` `" : j.substring(0, j.length - 1),
@@ -281,11 +370,11 @@ export default {
       0 === d.length && (d = ["未分类"]);
       return K = d, f;
     },
-    stripFootnoteDefinitions: function(a) {
+    stripFootnoteDefinitions: function (a) {
       var b = this.FootNote,
         that = this;
 
-      return a = a.replace(/\n[ ]{0,3}\[\^(.+?)\]\:[ \t]*\n?([\s\S]*?)\n{1,2}((?=\n[ ]{0,3}\S)|$)/g, function(a, c, d) {
+      return a = a.replace(/\n[ ]{0,3}\[\^(.+?)\]\:[ \t]*\n?([\s\S]*?)\n{1,2}((?=\n[ ]{0,3}\S)|$)/g, function (a, c, d) {
         return c = that.n(c),
           d += "\n",
           d = d.replace(/^[ ]{0,3}/g, ""),
@@ -293,17 +382,17 @@ export default {
           "\n"
       })
     },
-    doFootNotes: function(a) {
+    doFootNotes: function (a) {
       a = this.stripFootnoteDefinitions(a);
       var c = 0,
         that = this;
-      a = a.replace(/\[\^(.+?)\]/g, function(a, d) {
+      a = a.replace(/\[\^(.+?)\]/g, function (a, d) {
         var e = that.n(d),
           f = that.FootNote.footnotes[e];
         if (void 0 === f)
           return a;
         c++,
-        that.FootNote.usedFootnotes.push(e);
+          that.FootNote.usedFootnotes.push(e);
         var g = '<a href="javascript:;" data-href="fn:' + e + '" id="fnref:' + e + '" title="查看注脚" class="footnote">[' + c + "]</a>";
         return that.hashExtraInline(g)
       })
@@ -311,27 +400,27 @@ export default {
       a = that.printFootNotes(a)
       return a;
     },
-    hashExtraInline: function(a) {
+    hashExtraInline: function (a) {
       return "~X" + (this.FootNote.hashBlocks.push(a) - 1) + "X"
     },
-    n: function(a) {
+    n: function (a) {
       return a.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]+/g, "").replace(/\-\-+/g, "-").replace(/^-+/, "").replace(/-+$/, "")
     },
-    unHashExtraBlocks: function(a) {
+    unHashExtraBlocks: function (a) {
       function b() {
         var d = !1;
-        a = a.replace(/(?:<p>)?~X(\d+)X(?:<\/p>)?/g, function(a, b) {
-            d = !0;
-            var e = parseInt(b, 10);
-            return c.FootNote.hashBlocks[e]
-          }),
+        a = a.replace(/(?:<p>)?~X(\d+)X(?:<\/p>)?/g, function (a, b) {
+          d = !0;
+          var e = parseInt(b, 10);
+          return c.FootNote.hashBlocks[e]
+        }),
           d === !0 && b()
       }
       var c = this;
       return b(),
         a
     },
-    printFootNotes: function(a) {
+    printFootNotes: function (a) {
       var b = this;
       if (0 === b.FootNote.usedFootnotes.length)
         return a;
@@ -344,33 +433,116 @@ export default {
       }
       return a += "</small>\n</div>"
     },
-    newLines: function(a) {
-      return a.replace(/(<(?:br|\/li)>)?\n/g, function(a, b) {
+    newLines: function (a) {
+      return a.replace(/(<(?:br|\/li)>)?\n/g, function (a, b) {
         return b ? a : " <br>\n"
       })
     }
   },
   mounted() {
-    // var that = this
-    // that.$http.get('/api/article/getArticle?id=' + that.$route.params.id)
-    //     .then((response) => {
-    //         that.input = response.body[0].content
-    //     })
-    // this.$nextTick(() => {
-    //     console.log($('.mermaid').length)
-    // })
+    this.previewMd(this.input)
+
+    // Auto focus and set cursor behind title for new articles
+    if (!this.$route.params.id) {
+      this.$nextTick(() => {
+        let textarea = this.$refs.editor
+        if (textarea) {
+          textarea.focus()
+          // Position 9 is after "# 在此处输入标题"
+          textarea.setSelectionRange(9, 9)
+        }
+      })
+    }
   }
 }
 
 </script>
 <style scoped>
-@import url(//cdn.bootcss.com/bootstrap/3.3.1/css/bootstrap.min.css);
-
-
-
 /*@import url(//use.fontawesome.com/releases/v5.2.0/css/all.css);*/
 
 @import url(../assets/css/icon-font.css);
 @import url(../assets/css/edit.css);
 
+.edit-view .pull-left,
+.edit-view .pull-right {
+  top: 40px !important;
+  /* Only toolbar height */
+}
+
+.toolbar {
+  height: 40px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.toolbar a {
+  display: inline-block;
+  text-decoration: none !important;
+  color: #888;
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
+  text-align: center;
+  border-radius: 4px;
+  margin-right: 5px;
+  transition: all 0.2s;
+  font-size: 16px;
+}
+
+.toolbar a:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.toolbar .divider {
+  color: #eee;
+  margin: 0 10px;
+  font-size: 14px;
+}
+
+.toolbar .submit-inline {
+  margin-left: auto;
+  width: auto;
+  padding: 0 15px;
+  font-size: 14px;
+  color: #42b983;
+  font-weight: 600;
+}
+
+.toolbar .submit-inline:hover {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.toolbar .submit-inline i {
+  margin-right: 5px;
+}
+
+.editor-input {
+  caret-color: #000;
+  /* Black cursor */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  font-size: 18px;
+  /* Slightly larger for better visibility */
+  line-height: 2;
+  /* "Longer" cursor */
+  color: #333;
+  padding: 20px;
+  background-color: #ffffff;
+  font-weight: 500;
+}
+
+.editor-input::selection {
+  background: rgba(0, 0, 0, 0.1);
+  color: #000;
+}
 </style>
