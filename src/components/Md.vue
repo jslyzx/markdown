@@ -228,6 +228,11 @@ export default {
                         }
                     })()
                     s.renderToc();
+                    this.$nextTick(() => {
+                        if (window.MathJax) {
+                            MathJax.Hub.Queue(["Typeset", MathJax.Hub, document.getElementById('content')]);
+                        }
+                    })
                 })
                 .catch((error) => {
                     console.log(error)
@@ -359,7 +364,7 @@ export default {
 </script>
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
-@import url(//cdn.bootcss.com/bootstrap/3.3.1/css/bootstrap.min.css);
+@import url(../../static/vendor/css/bootstrap.min.css);
 
 /*@import url(//use.fontawesome.com/releases/v5.2.0/css/all.css);*/
 .md-detail-container {
